@@ -1,0 +1,313 @@
+substitutions:
+  device_name: esp-rozdzielnia
+  friendly_name: esp32-rozdzielnia
+  device_description: "Sterownik oświetlenia w domu"
+
+esphome:
+  name: esp32-rozdzielnia
+  includes:
+    - expander_globals.h
+
+esp8266:
+  board: d1_mini
+
+i2c:
+  sda: 4
+  scl: 5
+  scan: True
+  id: i2c_component
+
+external_components:
+  - source:
+      type: git
+      url: https://github.com/robertklep/esphome-custom-component
+    components: [ custom, custom_component ]
+
+# Lambda custom_component uruchamia sie w setup() przed output i binary_sensor.
+# Ustawiamy global_expander tutaj - bedzie gotowy zanim lambdy output/sensor go uzyja.
+custom_component:
+  - id: expander1
+    lambda: |-
+      auto *expander = new ArduinoPortExpander(i2c_component, 0x08, true);
+      global_expander = expander;
+      App.register_component_(expander);
+      return {expander};
+
+web_server:
+  port: 80
+
+wifi:
+  ssid: NETGEAR07
+  password: festivecomet442
+  min_auth_mode: WPA2
+
+  manual_ip:
+    static_ip: 192.168.18.10
+    gateway: 192.168.18.1
+    subnet: 255.255.255.0
+
+  ap:
+    ssid: "Esp32-Rozdzielnia"
+    password: "drpol2409b"
+
+logger:
+  level: INFO
+
+api:
+
+ota:
+  platform: esphome
+
+captive_portal:
+
+text_sensor:
+  - platform: template
+    name: uptime ${device_name}
+    id: uptime_human
+    icon: mdi:clock-start
+
+sensor:
+  - platform: uptime
+    name: Uptime Sensor
+    id: uptime_sensor
+    update_interval: 60s
+    on_raw_value:
+      then:
+        - text_sensor.template.publish:
+            id: uptime_human
+            state: !lambda |-
+              int seconds = round(id(uptime_sensor).get_raw_state());
+              int days = seconds / (24 * 3600);
+              seconds = seconds % (24 * 3600);
+              int hours = seconds / 3600;
+              seconds = seconds % 3600;
+              int minutes = seconds / 60;
+              seconds = seconds % 60;
+              return (
+                (days ? to_string(days) + "d " : "") +
+                (hours ? to_string(hours) + "h " : "") +
+                (minutes ? to_string(minutes) + "m " : "") +
+                (to_string(seconds) + "s")
+              ).c_str();
+
+switch:
+  - platform: restart
+    name: "Restart esp32-rozdzielnia"
+
+# global_expander jest ustawiony przez custom_component przed uruchomieniem tych lambd
+output:
+  - platform: custom
+    type: binary
+    lambda: |-
+      return {global_expander->get_binary_output(22),
+              global_expander->get_binary_output(23),
+              global_expander->get_binary_output(24),
+              global_expander->get_binary_output(25),
+              global_expander->get_binary_output(26),
+              global_expander->get_binary_output(28),
+              global_expander->get_binary_output(30),
+              global_expander->get_binary_output(32),
+              global_expander->get_binary_output(34),
+              global_expander->get_binary_output(35),
+              global_expander->get_binary_output(36),
+              global_expander->get_binary_output(38),
+              global_expander->get_binary_output(39),
+              global_expander->get_binary_output(40),
+              global_expander->get_binary_output(42),
+              global_expander->get_binary_output(44),
+              global_expander->get_binary_output(45)};
+    outputs:
+      - id: kuchnia
+        inverted: False
+      - id: kuchnia_blat
+        inverted: False
+      - id: korytarz_parter
+        inverted: False
+      - id: lazienka_parter
+        inverted: False
+      - id: lazienka_pietro
+        inverted: False
+      - id: pralnia
+        inverted: False
+      - id: jadalnia
+        inverted: False
+      - id: schody
+        inverted: False
+      - id: ganek
+        inverted: False
+      - id: wiatrolap
+        inverted: False
+      - id: salon
+        inverted: False
+      - id: szafa
+        inverted: False
+      - id: bojler
+        inverted: False
+      - id: szafki_kuchnia
+        inverted: False
+      - id: taras
+        inverted: False
+      - id: garaz
+        inverted: False
+      - id: pokoj_parter
+        inverted: False
+
+light:
+  - platform: binary
+    id: kuchnia1
+    name: kuchnia
+    output: kuchnia
+  - platform: binary
+    id: kuchnia_blat1
+    name: kuchnia_blat
+    output: kuchnia_blat
+  - platform: binary
+    id: korytarz_parter1
+    name: korytarz_parter
+    output: korytarz_parter
+  - platform: binary
+    id: lazienka_parter1
+    name: lazienka_parter
+    output: lazienka_parter
+  - platform: binary
+    id: lazienka_pietro1
+    name: lazienka_pietro
+    output: lazienka_pietro
+  - platform: binary
+    id: pralnia1
+    name: pralnia
+    output: pralnia
+  - platform: binary
+    id: jadalnia1
+    name: jadalnia
+    output: jadalnia
+  - platform: binary
+    id: schody1
+    name: schody
+    output: schody
+  - platform: binary
+    id: ganek1
+    name: ganek
+    output: ganek
+  - platform: binary
+    id: wiatrolap1
+    name: wiatrolap
+    output: wiatrolap
+  - platform: binary
+    id: salon1
+    name: salon
+    output: salon
+  - platform: binary
+    id: szafa1
+    name: szafa
+    output: szafa
+  - platform: binary
+    id: bojler1
+    name: bojler
+    output: bojler
+  - platform: binary
+    id: szafki_kuchnia1
+    name: szafki_kuchnia
+    output: szafki_kuchnia
+  - platform: binary
+    id: taras1
+    name: taras
+    output: taras
+  - platform: binary
+    id: garaz1
+    name: garaz
+    output: garaz
+  - platform: binary
+    id: pokoj_parter1
+    name: pokoj_parter
+    output: pokoj_parter
+
+binary_sensor:
+  - platform: custom
+    lambda: |-
+      return {global_expander->get_binary_sensor(4),
+              global_expander->get_binary_sensor(5),
+              global_expander->get_binary_sensor(6),
+              global_expander->get_binary_sensor(7),
+              global_expander->get_binary_sensor(8),
+              global_expander->get_binary_sensor(10),
+              global_expander->get_binary_sensor(54),
+              global_expander->get_binary_sensor(56),
+              global_expander->get_binary_sensor(58),
+              global_expander->get_binary_sensor(59),
+              global_expander->get_binary_sensor(60),
+              global_expander->get_binary_sensor(62),
+              global_expander->get_binary_sensor(63),
+              global_expander->get_binary_sensor(64),
+              global_expander->get_binary_sensor(66),
+              global_expander->get_binary_sensor(68),
+              global_expander->get_binary_sensor(69)};
+    binary_sensors:
+      - id: kuchnia2
+        internal: true
+        on_press:
+          - light.toggle: kuchnia1
+      - id: kuchnia_blat2
+        internal: true
+        on_press:
+          - light.toggle: kuchnia_blat1
+      - id: korytarz_parter2
+        internal: true
+        on_press:
+          - light.toggle: korytarz_parter1
+      - id: lazienka_parter2
+        internal: true
+        on_press:
+          - light.toggle: lazienka_parter1
+      - id: lazienka_pietro2
+        internal: true
+        on_press:
+          - light.toggle: lazienka_pietro1
+      - id: pralnia2
+        internal: true
+        on_press:
+          - light.toggle: pralnia1
+      - id: jadalnia2
+        internal: true
+        on_press:
+          - light.toggle: jadalnia1
+      - id: schody2
+        internal: true
+        on_press:
+          - light.toggle: schody1
+      - id: ganek2
+        internal: true
+        on_press:
+          - light.toggle: ganek1
+      - id: wiatrolap2
+        internal: true
+        on_press:
+          - light.toggle: wiatrolap1
+      - id: salon2
+        internal: true
+        on_press:
+          - light.toggle: salon1
+      - id: szafa2
+        internal: true
+        on_press:
+          - light.toggle: szafa1
+      - id: bojler2
+        internal: true
+        on_press:
+          - light.toggle: bojler1
+      - id: szafki_kuchnia2
+        internal: true
+        on_press:
+          - light.toggle: szafki_kuchnia1
+      - id: taras2
+        internal: true
+        on_press:
+          - light.toggle: taras1
+      - id: garaz2
+        internal: true
+        on_press:
+          - light.toggle: garaz1
+      - id: pokoj_parter2
+        internal: true
+        on_press:
+          - light.toggle: pokoj_parter1
